@@ -1,26 +1,38 @@
-import praw, time, random, webbrowser, traceback
+import praw, time, traceback
 
-reddit = praw.Reddit(client_id="my client id",
-                     client_secret="my client secret",
-                     user_agent="my user agent",
-                     username="my username",
-                     password="my password")
+slurs = ["<slur>",
+         "<slur2>",
+         "<slur3>"]
+
+mods = ["<mod>",
+        "<mod2>",
+        "<mod3>"]
 
 slurwarningmessage = """
 1 - **Sitewide Rule 1: NO BULLYING, HARASSMENT, or BIGOTRY**
 
 2 - Your comment was removed because it contains a rude word
 
-3 - If you have any questions or comments about this action, **Use this link to send us a mod mail message** [here](https://www.reddit.com/message/compose?to=%2Fr%2FRedditMoment&subject=About my removed submission&message=I'm writing to you about the following removal: {0}. %0D%0DMy issue is:). 
+3 - If you have any questions or comments about this action, **Use this link to send us a mod mail message** [here](https://www.reddit.com/message/compose?to=%2Fr%2FRedditMoment&subject=About my removed comment&message=I'm writing to you about the following removal: {0}. %0D%0DMy issue is:). 
 """
+
+reddit = praw.Reddit(user_agent="<user agent>",
+                     client_id="<client id>",
+                     client_secret="<client secret>",
+                     username="<username>",
+                     password="<password>")
 
 while True:
     try:
-        for comment in reddit.subreddit("<sub>").stream.comments(skip_existing=True):
-            if '<slur>' or '<slur2>' in comment.body:
-                comment.reply(slurwarningmessage.format(comment.permalink))
-                comment.mod.remove()
-                print('Replied to comment' + comment.id)
+        for submission in reddit.subreddit("<sub>").stream.comments(skip_existing=True):
+            for slur in slurs:
+                if slur in comment.body and comment.author.name not in mods:
+                    comment.reply(slurwarningmessage.format(comment.permalink)).mod.distinguish()
+                    comment.mod.remove()
+                    break
     except Exception:
         print(traceback.format_exc())
         time.sleep(60)
+    except KeyboardInterrupt:
+        print('Shutting Down :(')
+        quit()
